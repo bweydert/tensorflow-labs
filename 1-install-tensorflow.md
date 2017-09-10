@@ -44,29 +44,16 @@ Option 1: Installing with Pip
 
 Option 2: Installing with Anaconda (if you have anaoconda)
 ```bash
-    $   conda install tensorflow --ignore-installed --upgrade  <URL>
+    $   pip install <URL>
 ```
 
 The URL here is as follows:
  * Mac: https://storage.googleapis.com/tensorflow/mac/cpu/tensorflow-1.1.0-py3-none-any.whl
  * Windows: https://storage.googleapis.com/tensorflow/windows/cpu/tensorflow-1.1.0-cp35-cp35m-win_amd64.whl 
- * Linux: https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.1.0-cp35-cp35m-linux_x86_64.whl
+ * Linux:  https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.3.0-cp36-cp36m-linux_x86_64.whl 
 
 
-There is no 'install'.  Just unzip/untar and run :-)
-(copy paste the following commands on terminal,  do not include $ in your commands)
-
-```bash
-    $   cd
-    $   rm -rf  tensorflow   # cleanup existing tensorflow installation (if any)
-    $   tar xvf   files/tensorflow-2.1.0-bin-hadoop2.7.tgz
-    $   mv  tensorflow-2.1.0-bin-hadoop2.7    tensorflow
-```
-
-Now we have tensorflow installed in  `~/tensorflow`  directory
-
-
-## STEP 4: Testing Tensorflow
+## STEP 3: Testing Tensorflow
 
 
 Enter this program in your python
