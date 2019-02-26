@@ -1,5 +1,28 @@
 # tensorflow-labs
 
+These are labs for our Deep Learning with Tensorflow and Keras course.
+
+## Running the Labs
+
+There are two main ways we recoommend running the Labs:
+
+1. Locally
+2. Hosted on [Google Colaboratory](https://colab.research.google.com/)
+
+#### Running Locally
+
+To Run locally, we recommend downloading and installing [Anaconda](https://www.anaconda.com/distribution/#download-section)
+
+Here is the URL for your copy-and-pasting pleasure:
+
+`https://www.anaconda.com/distribution/#download-section`
+
+Make certain you download Anaconda for Python version **3**, **NOT** Python version **2**.
+
+#### Running with Google Colaboratory
+
+[Here](./colab-intro.md) is a guide for running with Google Colaboratory.
+
 ## For instructor
 
 ### AWS option 1
