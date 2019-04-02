@@ -1,0 +1,41 @@
+<p><a href="../README.html">&lt;&lt; back to main index</a></p>
+<h1 id="lab-1.1-up-and-running-with-tensorflow">Lab 1.1 : Up and Running With TensorFlow</h1>
+<h3 id="overview">Overview</h3>
+<p>We will be running TensorFlow in a single node mode.</p>
+<h3 id="depends-on">Depends On</h3>
+<p>None</p>
+<h3 id="run-time">Run time</h3>
+<p>20 mins</p>
+<h2 id="step-0-to-instructor">STEP 0: To Instructor</h2>
+<p>Please go through this lab on ‘screen’ first.</p>
+<h2 id="step-1-login-to-your-tensorflow-node">STEP 1: Login to your TensorFlow node</h2>
+<p>Instructor will provide details</p>
+<h2 id="step-2-preparing-install">STEP 2: Preparing Install</h2>
+<p>On linux, you will need to insure that the proper development libraries are installed.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb1-1" data-line-number="1">   $ <span class="fu">sudo</span> apt-get install python-dev python3-dev  #Ubuntu/Debian</a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb2-1" data-line-number="1">   $ <span class="fu">sudo</span> apt-get install python-devel python3-devel  #Redhat/Centos</a></code></pre></div>
+<p>You then need to make sure that you have a proper version of Python. Windows users are highly recommended to install anaconda for Python v3.</p>
+<p>http://www.anaconda.com/download</p>
+<h2 id="step-3-installing-tensorflow-and-keras">STEP 3: Installing TensorFlow And Keras</h2>
+<p>Option 1: Installing with Pip</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb3-1" data-line-number="1">    $   <span class="ex">pip3</span> install tensorflow keras</a></code></pre></div>
+<p>Option 2: Installing with Anaconda (if you have anaoconda)</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb4-1" data-line-number="1">    $   <span class="ex">conda</span> install tensorflow</a>
+<a class="sourceLine" id="cb4-2" data-line-number="2">    $   <span class="ex">conda</span> install keras</a></code></pre></div>
+<p>If you have trouble with conda command, you can try installing with pip.</p>
+<h2 id="step-3-testing-tensorflow">STEP 3: Testing TensorFlow</h2>
+<p>Enter this program in your python</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python"><code class="sourceCode python"><a class="sourceLine" id="cb5-1" data-line-number="1">   <span class="op">&gt;&gt;&gt;</span> <span class="im">import</span> tensorflow <span class="im">as</span> tf</a>
+<a class="sourceLine" id="cb5-2" data-line-number="2">   <span class="op">&gt;&gt;&gt;</span> hello <span class="op">=</span> tf.constant(<span class="st">&#39;Hello, TensorFlow!&#39;</span>)</a>
+<a class="sourceLine" id="cb5-3" data-line-number="3">   <span class="op">&gt;&gt;&gt;</span> sess <span class="op">=</span> tf.Session()</a>
+<a class="sourceLine" id="cb5-4" data-line-number="4">   <span class="op">&gt;&gt;&gt;</span> <span class="bu">print</span>(sess.run(hello))</a></code></pre></div>
+<p>You should get the following output</p>
+<pre class="console"><code>   Hello, TensorFlow!</code></pre>
+<p>bingo! Now we have tensorflow running.</p>
+<h2 id="step-5-download-tensorflow-labs">STEP 5: Download TensorFlow labs</h2>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb7-1" data-line-number="1">    $   <span class="bu">cd</span></a>
+<a class="sourceLine" id="cb7-2" data-line-number="2">    $   <span class="fu">git</span> clone   git@github.com:elephantscale/tensorflow-labs.git</a>
+<a class="sourceLine" id="cb7-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb7-4" data-line-number="4">    <span class="co"># $  cd  ~/tensorflow-labs</span></a>
+<a class="sourceLine" id="cb7-5" data-line-number="5">    <span class="co"># $  git checkout master</span></a></code></pre></div>
+<p>This will create a <code>tensorflow-labs</code> directory that has all the labs.</p>
