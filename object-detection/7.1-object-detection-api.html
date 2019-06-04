@@ -1,0 +1,127 @@
+<h1 id="lab-7.1-object-detection-api">Lab 7.1: Object Detection API</h1>
+<p>In this lab, we will use the Object Detection API. This will help us find objects in our images</p>
+<h3 id="pre-trained-models">Pre-trained models</h3>
+<p>You can use five pre-trained models with the Object Detection API. They are trained with the COCO dataset and are capable of detecting general objects in 80 categories.The COCO mAP column shows the model’s accuracy index. Higher numbers indicate better accuracy. As speed increases, accuracy decreases.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Model name</th>
+<th>Speed</th>
+<th>COCO mAP</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ssd_mobilenet_v1_coco</td>
+<td>fast</td>
+<td>21</td>
+</tr>
+<tr class="even">
+<td>ssd_inception_v2_coco</td>
+<td>fast</td>
+<td>24</td>
+</tr>
+<tr class="odd">
+<td>rfcn_resnet101_coco</td>
+<td>medium</td>
+<td>30</td>
+</tr>
+<tr class="even">
+<td>faster_rcnn_resnet101_coco</td>
+<td>medium</td>
+<td>32</td>
+</tr>
+<tr class="odd">
+<td>faster_rcnn_inception_resnet_v2_atrous_coco</td>
+<td>slow</td>
+<td>37</td>
+</tr>
+</tbody>
+</table>
+<h2 id="install-the-object-detection-api-library">Install the Object Detection API library</h2>
+<p>##Install the prerequisite packages:</p>
+<pre class="console"><code>sudo apt-get update
+apt-get install -y protobuf-compiler </code></pre>
+<p>Install TensorFlow v1.1.0:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="ex">conda</span> install tensorflow</a></code></pre></div>
+<p>Install the Object Detection API library:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="bu">cd</span> /opt</a>
+<a class="sourceLine" id="cb3-2" data-line-number="2"><span class="fu">sudo</span> git clone https://github.com/tensorflow/models</a>
+<a class="sourceLine" id="cb3-3" data-line-number="3"><span class="bu">cd</span> models/research</a>
+<a class="sourceLine" id="cb3-4" data-line-number="4"><span class="fu">sudo</span> protoc object_detection/protos/*.proto --python_out=.</a></code></pre></div>
+<p>Download the pre-trained model binaries by running the following commands:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="fu">sudo</span> mkdir -p /opt/graph_def</a>
+<a class="sourceLine" id="cb4-2" data-line-number="2"><span class="bu">cd</span> /tmp</a>
+<a class="sourceLine" id="cb4-3" data-line-number="3"><span class="fu">sudo</span> su</a>
+<a class="sourceLine" id="cb4-4" data-line-number="4"><span class="kw">for</span> <span class="ex">model</span> in \</a>
+<a class="sourceLine" id="cb4-5" data-line-number="5">  ssd_mobilenet_v1_coco_11_06_2017 \</a>
+<a class="sourceLine" id="cb4-6" data-line-number="6">  ssd_inception_v2_coco_11_06_2017 \</a>
+<a class="sourceLine" id="cb4-7" data-line-number="7">  rfcn_resnet101_coco_11_06_2017 \</a>
+<a class="sourceLine" id="cb4-8" data-line-number="8">  faster_rcnn_resnet101_coco_11_06_2017 \</a>
+<a class="sourceLine" id="cb4-9" data-line-number="9">  faster_rcnn_inception_resnet_v2_atrous_coco_11_06_2017</a>
+<a class="sourceLine" id="cb4-10" data-line-number="10"><span class="kw">do</span> <span class="kw">\</span></a>
+<a class="sourceLine" id="cb4-11" data-line-number="11">  <span class="ex">curl</span> -OL http://download.tensorflow.org/models/object_detection/<span class="va">$model</span>.tar.gz</a>
+<a class="sourceLine" id="cb4-12" data-line-number="12">  <span class="fu">tar</span> -xzf <span class="va">$model</span>.tar.gz <span class="va">$model</span>/frozen_inference_graph.pb</a>
+<a class="sourceLine" id="cb4-13" data-line-number="13">  <span class="fu">cp</span> -a <span class="va">$model</span> /opt/graph_def/</a>
+<a class="sourceLine" id="cb4-14" data-line-number="14"><span class="kw">done</span></a></code></pre></div>
+<p>Now you will choose a model for the web application to use. For this lab, enter the following command faster_rcnn_resnet101_coco_11_06_2017:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="fu">sudo</span> ln -sf /opt/graph_def/faster_rcnn_resnet101_coco_11_06_2017/frozen_inference_graph.pb /opt/graph_def/frozen_inference_graph.pb</a></code></pre></div>
+<p>Install and launch the web application Change to the root home directory:</p>
+<p>Install the application:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="bu">cd</span> ~/tensorflow-labs/object-detection</a>
+<a class="sourceLine" id="cb6-2" data-line-number="2"><span class="fu">sudo</span> cp -r object_detection_app /opt/</a></code></pre></div>
+<p>Create the object detection service:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="fu">sudo</span> cp /opt/object_detection_app/object-detection.service /etc/systemd/system/</a></code></pre></div>
+<p>Reload systemd to reload the systemd manager configuration:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="fu">sudo</span> systemctl daemon-reload</a></code></pre></div>
+<p>The application provides a simple user authentication mechanism. You can change the default username and password by modifying the /opt/object_detection_app/decorator.py file and changing the following lines:</p>
+<pre class="console"><code>USERNAME = &#39;username&#39; PASSWORD = &#39;passw0rd&#39;</code></pre>
+<p>Launch the application.</p>
+<pre class="console"><code>sudo systemctl enable object-detection
+sudo systemctl start object-detection
+sudo systemctl status object-detection</code></pre>
+<p>The last command outputs the application status, as in the following example:</p>
+<pre class="console"><code>
+object-detection.service - Object Detection API Demo
+   Loaded: loaded (/opt/object_detection_app/object-detection.service; linked)
+   Active: active (running) since Wed 2017-06-21 05:34:10 UTC; 22s ago
+  Process: 7122 ExecStop=/bin/kill -TERM $MAINPID (code=exited, status=0/SUCCESS)
+ Main PID: 7125 (app.py)
+   CGroup: /system.slice/object-detection.service
+           └─7125 /usr/bin/python /opt/object_detection_app/app.py
+
+Jun 21 05:34:10 object-detection systemd[1]: Started Object Detection API Demo.
+Jun 21 05:34:26 object-detection app.py[7125]: 2017-06-2105:34:26.518736: W tensorflow/core/platform/cpu_fe...ons.
+Jun 21 05:34:26 object-detection app.py[7125]: 2017-06-2105:34:26.518790: W tensorflow/core/platform/cpu_fe...ons.
+Jun 21 05:34:26 object-detection app.py[7125]: 2017-06-2105:34:26.518795: W tensorflow/core/platform/cpu_fe...ons.
+Jun 21 05:34:26 object-detection app.py[7125]: * Running on http://0.0.0.0:80/ (Press CTRL+C to quit)</code></pre>
+<p>The application loads the model binary immediately after launch. It will take a minute to start serving requests from clients. You’ll see the message <code>Running on http://0.0.0.0:80/ (Press CTRL+C to quit)</code> when it’s ready.</p>
+<h3 id="test-the-web-application">Test the web application</h3>
+<p>Return to the Google Cloud Platform console tab.</p>
+<p>Click the external ip-address link next to your lab instance (VM?) to open a browser window to the example application.</p>
+<p>Log in with the following credentials:</p>
+<ul>
+<li>Username - username</li>
+<li>Password - passw0rd</li>
+</ul>
+<p>Click Choose File and select an image file from your computer to analyse.</p>
+<p>Click Upload to test.</p>
+<p>When you upload an image file with a JPEG, JPG, or PNG extension, the application shows the result of the object detection inference, as shown in the following image. The inference might take up to 30 seconds, depending on the image.</p>
+<p>The object names detected by the model are shown to the right of the image, in the application window. Click an object name to display rectangles surrounding the corresponding objects in the image. The rectangle thickness increases with object identification confidence.In the above image, “fork”, “cup”, “dining table”, “person”, and “knife”, are detected. After clicking “cup”, rectangles display around all detected cups in the image. Click “original” to see the original image.</p>
+<p>Optional: If you have time, test this model’s accuracy by uploading images that contain different types of objects.</p>
+<p>Change the inference model Go back to the SSH console and run the following to change the inference model by running the following:</p>
+<pre><code>systemctl stop object-detection</code></pre>
+<p>Replace [MODEL NAME] with one of the following options.</p>
+<ul>
+<li>ssd_mobilenet_v1_coco_11_06_2017</li>
+<li>ssd_inception_v2_coco_11_06_2017</li>
+<li>rfcn_resnet101_coco_11_06_2017</li>
+<li>faster_rcnn_resnet101_coco_11_06_2017</li>
+<li>faster_rcnn_inception_resnet_v2_atrous_coco_11_06_2017</li>
+</ul>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb13-1" data-line-number="1"><span class="fu">sudo</span> ln -sf /opt/graph_def/[MODEL NAME]/frozen_inference_graph.pb /opt/graph_def/frozen_inference_graph.pb</a></code></pre></div>
+<p>Restart the application:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb14-1" data-line-number="1"><span class="fu">sudo</span> systemctl start object-detection</a></code></pre></div>
+<p>Check that the application has restarted successfully:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb15-1" data-line-number="1"><span class="fu">sudo</span> systemctl status object-detection</a></code></pre></div>
+<p>Once the application has successfully re-started with the updated model, retest some of your images to see how change affects object detection.</p>

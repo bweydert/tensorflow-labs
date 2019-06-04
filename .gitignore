@@ -3,3 +3,29 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.DS_Store
+*.out
+metastore_db/
+*.zip
+
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+
+# virtualenv
+.venv
+venv/
+ENV/
+

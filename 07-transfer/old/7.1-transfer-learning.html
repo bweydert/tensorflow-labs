@@ -1,0 +1,116 @@
+<h1 id="transfer-learning-flower-images">Transfer Learning: Flower Images</h1>
+<h1 id="download-the-training-images">Download the training images</h1>
+<p>Before you start any training, you’ll need a set of images to teach the model about the new classes you want to recognize. We’ve created an archive of creative-commons licensed flower photos to use initially. Download the photos (218 MB) by invoking the following commands:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="ex">curl</span> http://download.tensorflow.org/example_images/flower_photos.tgz \</a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">    <span class="kw">|</span> <span class="fu">tar</span> xz</a></code></pre></div>
+<p>You should now have a copy of the flower photos in your working directory. Confirm the contents of your working directory by issuing the following command:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="fu">ls</span> flower_photos</a></code></pre></div>
+<p>Example Output: You should see the following objects:</p>
+<pre class="console"><code>LICENSE.txt  daisy  dandelion  roses  sunflowers  tulip</code></pre>
+<p>Move the flower images directory into tf_files:</p>
+<pre><code>mv flower_photos tf_files</code></pre>
+<h2 id="retraining-the-network">(Re)training the network</h2>
+<h2 id="configure-your-mobilenet">Configure your MobileNet</h2>
+<p>The retrain script can retrain either Inception V3 model or a MobileNet. In this lab you will use a MobileNet. The principal difference is that Inception V3 is optimized for accuracy, while the MobileNets are optimized to be small and efficient, at the cost of some accuracy.</p>
+<p>Inception V3 has a first-choice accuracy of 78% on ImageNet, but the model is 85MB, and requires many times more processing than even the largest MobileNet configuration, which achieves 70.5% accuracy, with just a 19MB download.</p>
+<p>The following configuration options are available:</p>
+<p>Input image resolution: 128,160,192, or 224px. Unsurprisingly, feeding in a higher resolution image takes more processing time, but results in better classification accuracy. We recommend 224 as an initial setting.</p>
+<p>The relative size of the model as a fraction of the largest MobileNet: 1.0, 0.75, 0.50, or 0.25. We recommend 0.5 as an initial setting. The smaller models run significantly faster, at a cost of accuracy.</p>
+<p>With the recommended settings, it typically takes only a couple of minutes to retrain on a laptop.</p>
+<p>For this lab you’ll use the highest settings. Pass the settings inside Linux shell variables with the following commands:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="bu">export</span> <span class="va">IMAGE_SIZE=</span>224</a>
+<a class="sourceLine" id="cb5-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb5-3" data-line-number="3"><span class="bu">export</span> <span class="va">ARCHITECTURE=</span><span class="st">&quot;mobilenet_0.50_</span><span class="va">${IMAGE_SIZE}</span><span class="st">&quot;</span></a></code></pre></div>
+<p>The graph below shows the first-choice-accuracies of these configurations (y-axis), vs the number of calculations required (x-axis), and the size of the model (circle area).</p>
+<p>16 points are shown for MobileNet. For each of the 4 model sizes (circle area in the figure) there is one point for each image resolution setting. The 128px image size models are represented by the lower-left point in each set, while the 224px models are in the upper right.</p>
+<p><img src="../images/imagenet_graph.png" /></p>
+<h2 id="start-tensorboard">Start TensorBoard</h2>
+<p>Launch tensorboard in the background.</p>
+<pre class="console"><code>tensorboard --logdir tf_files/training_summaries &amp;</code></pre>
+<p>This command will fail with the following error if you already have a TensorBoard process running:<code>ERROR:tensorflow:TensorBoard attempted to bind to port 6006, but it was already in use</code></p>
+<p>You can kill all existing TensorBoard instances with:</p>
+<p><code>pkill -f &quot;tensorboard&quot;</code></p>
+<p>This URL will be how you get to TensorBoard:</p>
+<p><code>http://devhost:6006</code></p>
+<p>Replace devhost with the external IP address for your VM and refresh the browser. Now you’re ready.</p>
+<h2 id="run-the-training">Run the training</h2>
+<p>As noted in the introduction, Imagenet models are networks with millions of parameters that can differentiate a large number of classes. We’re only training the final layer of that network, so training will end in a reasonable amount of time.</p>
+<p>Start your retraining with one big command (note the –summaries_dir option, sending training progress reports to the directory that tensorboard is monitoring):</p>
+<pre class="console"><code>python -m retrain.py \
+  --bottleneck_dir=tf_files/bottlenecks \
+  --how_many_training_steps=500 \
+  --model_dir=tf_files/models/ \
+  --summaries_dir=tf_files/training_summaries/&quot;${ARCHITECTURE}&quot; \
+  --output_graph=tf_files/retrained_graph.pb \
+  --output_labels=tf_files/retrained_labels.txt \
+  --architecture=&quot;${ARCHITECTURE}&quot; \
+  --image_dir=tf_files/flower_photos</code></pre>
+<p>This script downloads the pre-trained model, adds a new final layer, and trains that layer on the flower photos you’ve downloaded to the lab.</p>
+<p>ImageNet does not include any of these flower species you’re training on. The kinds of information that make it possible for ImageNet to differentiate among 1,000 classes are useful for distinguishing other objects. By using this pre-trained network, you’re using that information as input to the final classification layer that distinguishes your flower classes.</p>
+<p>This will take several minutes to complete. Read through the next couple of sections while the training is running.</p>
+<h2 id="more-about-bottlenecks">More about Bottlenecks</h2>
+<p>This section and the next provide background on how this retraining process works.</p>
+<p>The first phase analyzes all the images on disk and calculates the bottleneck values for each of them. What’s a bottleneck?</p>
+<p><img src="../images/disk_analyze.png" /></p>
+<p>These ImageNet models are made up of many layers stacked on top of each other, a simplified picture of Inception V3 from TensorBoard, is shown above (all the details are available in this paper, with a complete picture on page 6). These layers are pre-trained and are already very valuable at finding and summarizing information that will help classify most images. For this lab, you are training only the last layer (final_training_ops in the figure below). While all the previous layers retain their already-trained state.</p>
+<p><img src="../images/model_workflow.png" /></p>
+<p>In the above figure, the node labeled “softmax”, on the left side, is the output layer of the original model. All the nodes to the right of the “softmax” were added by the retraining script.</p>
+<p>A bottleneck is an informal term often used for the layer just before the final output layer that actually does the classification. “Bottelneck” is not used to imply that the layer is slowing down the network, but because near the output, the representation is much more compact than in the main body of the network.</p>
+<p>Every image is reused multiple times during training. Calculating the layers behind the bottleneck for each image takes a significant amount of time. Since these lower layers of the network are not being modified their outputs can be cached and reused.</p>
+<p>So the script is running the constant part of the network, everything below the node labeled Bottlene… above, and caching the results.</p>
+<p>The command you ran saves these files to the bottlenecks/ directory. If you rerun the script, they’ll be reused, so you don’t have to wait for this part again.</p>
+<h2 id="more-about-training">More about Training</h2>
+<p>Once the script finishes generating all the bottleneck files, the actual training of the final layer of the network begins.</p>
+<p>The training operates efficiently by feeding the cached value for each image into the Bottleneck layer. The true label for each image is also fed into the node labeled GroundTruth. Just these two inputs are enough to calculate the classification probabilities, training updates, and the various performance metrics.</p>
+<p>As it trains you’ll see a series of step outputs, each one showing training accuracy, validation accuracy, and the cross entropy:</p>
+<p>The training accuracy shows the percentage of the images used in the current training batch that were labeled with the correct class. Validation accuracy is the precision (percentage of correctly-labelled images) on a randomly-selected group of images from a different set. Cross entropy is a loss function that gives a glimpse into how well the learning process is progressing (lower numbers are better here). The figures below show an example of the progress of the model’s accuracy and cross entropy as it trains. When your model has finished generating the bottleneck files you can check your model’s progress by opening TensorBoard, and clicking on the figure’s name to show them. TensorBoard may print out warnings to your command line. These can safely be ignored.</p>
+<p><img src="../images/tensorflow_graph.png" /></p>
+<p><img src="../images/graph_metrics.png" /></p>
+<p>A true measure of the performance of the network is to measure its performance on a data set that is not in the training data. This performance is measured using the validation accuracy. If the training accuracy is high but the validation accuracy remains low, that means the network is overfitting, and the network is memorizing particular features in the training images that don’t help it classify images more generally.</p>
+<p>The training’s objective is to make the cross entropy as small as possible, so you can tell if the learning is working by keeping an eye on whether the loss keeps trending downwards, ignoring the short-term noise.</p>
+<p>By default, this script runs 4,000 training steps. Each step chooses 10 images at random from the training set, finds their bottlenecks from the cache, and feeds them into the final layer to get predictions. Those predictions are then compared against the actual labels to update the final layer’s weights through a backpropagation process.</p>
+<p>As the process continues, you should see the reported accuracy improve. After all the training steps are complete, the script runs a final test accuracy evaluation on a set of images that are kept separate from the training and validation pictures. This test evaluation provides the best estimate of how the trained model will perform on the classification task.</p>
+<p>You should see an accuracy value of between 85% and 99%, though the exact value will vary from run to run since there’s randomness in the training process. (If you are only training on two classes, you should expect higher accuracy.) This number value indicates the percentage of the images in the test set that are given the correct label after the model is fully trained.</p>
+<h3 id="go-back-to-tensorboard-tab">Go back to TensorBoard tab</h3>
+<p>When the command line returns that means that the training is complete. Go look at the TensorBoard tab again to see what your results look like.</p>
+<h3 id="using-the-retrained-model">Using the Retrained Model</h3>
+<p>The retraining script writes data to the following two files:</p>
+<p><code>tf_files/retrained_graph.pb</code>, which contains a version of the selected network with a final layer retrained on your categories. <code>tf_files/retrained_labels.txt</code>, which is a text file containing labels. Classifying an image Next you will run the script on this image of a daisy:</p>
+<p><img src="../images/daisy_image.jpg" /></p>
+<p><code>flower_photos/daisy/21652746_cc379e0eea_m.jpg</code></p>
+<pre class="console"><code>python -m scripts.label_image \
+    --graph=tf_files/retrained_graph.pb  \
+    --image=tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg</code></pre>
+<p>Each execution will print a list of flower labels, in most cases with the correct flower on top (though each retrained model may be slightly different).</p>
+<p>You should get results like this for the daisy photo:</p>
+<pre class="console"><code>Daisy  0.99508375
+Dandelion  0.0028086917
+sunflowers 0.002093148
+Roses  1.37025945e-05
+Tulips  6.3252025e-07</code></pre>
+<p>This indicates a high confidence (~99%) that the image is a daisy, and low confidence for any other label.</p>
+<p>Try it again with a new image:</p>
+<p><img src="../images/rose_image.jpg" /></p>
+<p><code>flower_photos/roses/2414954629_3708a1a04d.jpg</code></p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb10-1" data-line-number="1"><span class="ex">python</span> -m scripts.label_image \</a>
+<a class="sourceLine" id="cb10-2" data-line-number="2">    --graph=tf_files/retrained_graph.pb  \</a>
+<a class="sourceLine" id="cb10-3" data-line-number="3">    --image=tf_files/flower_photos/roses/2414954629_3708a1a04d.jpg</a></code></pre></div>
+<p>How did this image do compared to the first one?</p>
+<p>(Optional) Trying other hyperparameters if you have time You can use label_image.py to classify any image file you choose, either from your downloaded collection, or new ones. You just have to change the –image file name argument to the script.</p>
+<p>The retraining script has several other command line options you can use.</p>
+<p>You can read about these options in the help for the retrain script:</p>
+<pre class="console"><code>python -m scripts.retrain -h</code></pre>
+<p>Try adjusting some of these options to see if you can increase the final validation accuracy.</p>
+<p>For example, the –learning_rate parameter controls the magnitude of the updates to the final layer during training. So far we have left it out, so the program has used the default learning_rate value of 0.01. If you specify a small learning_rate, like 0.005, the training will take longer, but the overall precision might increase. Higher values of learning_rate, like 1.0, could train faster, but typically reduces precision, or even makes training unstable.You need to experiment carefully to see what works for your case.</p>
+<p>It is very helpful for this type of work if you give each experiment a unique name, so they show up as separate entries in TensorBoard.</p>
+<p>It’s the <code>--summaries_dir</code> option that controls the name in tensorboard. Earlier we used:</p>
+<p><code>--summaries_dir=training_summaries/basic</code></p>
+<p>TensorBoard is monitoring the contents of the <code>training_summaries</code> directory, so setting <code>--summarys_dir</code> to <code>training_summaries</code> or any subdirectory of <code>training_summaries</code> will work.</p>
+<p>You may want to set the following two options together, so your results are clearly labeled:</p>
+<p><code>--learning_rate=0.5 --summaries_dir=training_summaries/LR_0.5</code></p>
+<p>(Optional) Training on your own categories After you see the script working on the flower example images, you can start looking at teaching the network to recognize different categories.</p>
+<p>In theory, all you need to do is run the tool, specifying a particular set of sub-folders. Each sub-folder is named after one of your categories and contains only images from that category.</p>
+<p>If you complete this step and pass the root folder of the subdirectories as the argument for the –image_dir parameter, the script should train the images that you’ve provided, just like it did for the flowers.</p>
+<p>The classification script uses the folder names as label names, and the images inside each folder should be pictures that correspond to that label, as you can see in the flower archive:</p>
+<p><img src="../images/dir_structure.png" /></p>
+<p>Collect as many pictures of each label as you can and try it out!</p>

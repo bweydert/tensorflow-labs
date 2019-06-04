@@ -19,6 +19,14 @@ Here is the URL for your copy-and-pasting pleasure:
 
 Make certain you download Anaconda for Python version **3**, **NOT** Python version **2**.
 
+You then will need to install tensorflow and Keras. To do that, open an "Anaconda Prompt" (on Windows), or a Terminal (Mac/Linux).
+
+Then type:
+
+```python
+pip install tensorflow keras
+```
+
 #### Running with Google Colaboratory
 
 [Here](./colab-intro.md) is a guide for running with Google Colaboratory.
